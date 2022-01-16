@@ -11,7 +11,8 @@ public class ClientHandler {
     private Socket socket;
     private DataInputStream in;
     private DataOutputStream out;
-    private String name;
+    private String nick;
+    //private boolean isAuthenticated;
 
     public ClientHandler(Server server, Socket socket) {
         try {
@@ -19,8 +20,7 @@ public class ClientHandler {
             this.socket = socket;
             this.in = new DataInputStream(socket.getInputStream());
             this.out = new DataOutputStream(socket.getOutputStream());
-            this.name = String.valueOf(socket.getPort());
-            out.writeUTF("Hello from Server!");
+            out.writeUTF("Server: Hello!");
             new Thread(() -> {
                 try {
                     readMessage();
@@ -37,20 +37,32 @@ public class ClientHandler {
         }
     }
 
-    public String getName() {
-        return name;
-    }
-
     private void readMessage() throws IOException {
         String inStr;
-        while (true) {
+        M: while (true) {
             inStr = in.readUTF();
-            if (inStr.equalsIgnoreCase("/end")) {
-                System.out.println("Client disconnected - " + socket.getRemoteSocketAddress());
-                sendMessage("Server: you disconnected!");
-                break;
+            if (inStr.startsWith("/")) {
+                String[] tokens = inStr.split(" ");
+                switch (tokens[0]) {
+                    case "/auth":   nick = server.getAuthService().getNick(tokens[1], tokens[2]);
+                                    if (nick != null) {
+                                        System.out.println("Client authenticated: " + nick + socket.getRemoteSocketAddress());
+                                        sendMessage("Server: you authenticated - " + nick);
+                                        server.subscribe(this);
+                                    } else {
+                                        sendMessage("Server: wrong login or password.");
+                                    }
+                                    break;
+                    case "/end":    System.out.println("Client disconnected: "+ nick + socket.getRemoteSocketAddress());
+                                    sendMessage("Server: you disconnected!");
+                                    server.unsubscribe(this);
+                                    break M;
+                    case "/w":
+                    default: sendMessage("Server: Non-existent command");
+                }
+                continue;
             }
-            server.broadcastMsg(inStr, name);
+            server.broadcastMsg(inStr, nick);
         }
     }
 
@@ -59,7 +71,7 @@ public class ClientHandler {
             out.writeUTF(msg);
         } catch (IOException e) {
             //e.printStackTrace();
-            System.out.println(e.getMessage());
+            System.out.println("Exp: " + e.getMessage());
         }
     }
 

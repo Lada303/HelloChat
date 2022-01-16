@@ -10,15 +10,17 @@ public class Server {
 
     private final int SERVER_PORT = 8189;
     private List<ClientHandler> clients;
+    private AuthService authService;
 
     public Server() {
         try (ServerSocket serverSocket = new ServerSocket(SERVER_PORT)) {
             clients = new CopyOnWriteArrayList<>();
+            authService = new SimpleAuthService();
             while (true) {
                 System.out.println("Server run, waiting connection");
                 Socket socket = serverSocket.accept();
                 System.out.println("Client connected" + socket.getRemoteSocketAddress());
-                clients.add(new ClientHandler(this, socket));
+                new ClientHandler(this, socket);
             }
         } catch (IOException e) {
             //e.printStackTrace();
@@ -28,10 +30,24 @@ public class Server {
         }
     }
 
+    protected AuthService getAuthService() {
+        return authService;
+    }
+
+    protected void subscribe(ClientHandler clientHandler) {
+        clients.add(clientHandler);
+    }
+
+    protected void unsubscribe(ClientHandler clientHandler) {
+        clients.remove(clientHandler);
+    }
+
     protected void broadcastMsg(String msg, String name) {
         for (ClientHandler client : clients) {
             client.sendMessage(name + ": " + msg);
         }
     }
+
+
 
 }

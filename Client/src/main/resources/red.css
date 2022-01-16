@@ -1,0 +1,55 @@
+.root{
+    -fx-background-color: #e87070;
+
+}
+
+.menu-bar{
+    -fx-background-color: #d35959;
+    -fx-text-fill:  #650d0d;
+}
+
+.menu-bar:hover {
+    -fx-background-color: #982121;
+}
+
+.menu-item{
+    -fx-background-color: #d35959;
+    -fx-text-fill:  #650d0d;
+
+}
+.menu-item:hover{
+    -fx-background-color: #982121;
+    -fx-font-weight: bold;
+}
+
+.text-area{
+    -fx-text-fill: #650d0d;
+    -fx-highlight-fill: #982121;
+    -fx-highlight-text-fill: #d35959;
+    -fx-control-inner-background: #ee9b9b;
+    -fx-border-width: 1;
+    -fx-border-radius: 0;
+    -fx-border-color: #982121;
+}
+
+.text-field{
+    -fx-text-fill: #650d0d;
+    -fx-highlight-fill: #982121;
+    -fx-highlight-text-fill: #d35959;
+    -fx-control-inner-background: #ee9b9b;
+    -fx-border-width: 1;
+    -fx-border-radius: 0;
+    -fx-border-color: #982121;
+}
+
+.button{
+    -fx-background-color: #d35959;
+    -fx-text-fill:  #650d0d;
+}
+
+.button:hover{
+    -fx-background-color: #982121;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+
+}

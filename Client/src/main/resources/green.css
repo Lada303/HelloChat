@@ -1,0 +1,55 @@
+.root{
+    -fx-background-color: #94fa94;
+
+}
+
+.menu-bar{
+    -fx-background-color: #59c759;
+    -fx-text-fill:  #015701;
+}
+
+.menu-bar:hover {
+    -fx-background-color: #128a12;
+}
+
+.menu-item{
+    -fx-background-color: #59c759;
+    -fx-text-fill:  #015701;
+
+}
+.menu-item:hover{
+    -fx-background-color: #128a12;
+    -fx-font-weight: bold;
+}
+
+.text-area{
+    -fx-text-fill: #015701;
+    -fx-highlight-fill: #128a12;
+    -fx-highlight-text-fill: #59c759;
+    -fx-control-inner-background: #c8fcc8;
+    -fx-border-width: 1;
+    -fx-border-radius: 0;
+    -fx-border-color: #59c759;
+}
+
+.text-field{
+    -fx-text-fill: #015701;
+    -fx-highlight-fill: #128a12;
+    -fx-highlight-text-fill: #59c759;
+    -fx-control-inner-background: #c8fcc8;
+    -fx-border-width: 1;
+    -fx-border-radius: 0;
+    -fx-border-color: #59c759;
+}
+
+.button{
+    -fx-background-color: #59c759;
+    -fx-text-fill:  #015701;
+}
+
+.button:hover{
+    -fx-background-color: #128a12;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+
+}

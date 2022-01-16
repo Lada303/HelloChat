@@ -9,8 +9,8 @@
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.PasswordField?>
 
-<?import javafx.scene.control.SeparatorMenuItem?>
 <VBox alignment="CENTER" spacing="20.0" xmlns:fx="http://javafx.com/fxml"
       fx:controller="lada303.client.Controller">
     <padding>
@@ -19,9 +19,7 @@
 
     <MenuBar>
         <Menu text = "Main">
-            <MenuItem text = "Start Connection" onAction="#clickStartConnection"/>
-            <MenuItem text = "Close Connection" onAction="#clickCloseConnection"/>
-            <SeparatorMenuItem></SeparatorMenuItem>
+            <MenuItem text = "New Authentication" onAction="#clickNewAuthentication"/>
             <MenuItem text = "Close Chat" onAction="#clickClose"/>
         </Menu>
         <Menu text = "Themes">
@@ -32,9 +30,14 @@
             <MenuItem text = "White" onAction="#clickChangeTheme"/>
         </Menu>
     </MenuBar>
+    <HBox fx:id="logBox">
+        <TextField fx:id="loginField"  HBox.hgrow="ALWAYS" promptText="login"/>
+        <PasswordField fx:id="passwordField"  HBox.hgrow="ALWAYS" promptText="password"/>
+        <Button text="Log in" onAction="#clickSendLogInfo"/>
+    </HBox>
     <TextArea fx:id="chatText" VBox.vgrow="ALWAYS" editable="false" focusTraversable="false"/>
-    <HBox>
-        <TextField fx:id="sendText"  HBox.hgrow="ALWAYS" onAction="#sendMessage"/>
-        <Button text="Send" onAction="#sendMessage"/>
+    <HBox fx:id="msgBox" visible="false" managed="false">
+        <TextField fx:id="sendText"  HBox.hgrow="ALWAYS" onAction="#clickSendMessage"/>
+        <Button text="Send" onAction="#clickSendMessage"/>
     </HBox>
 </VBox>

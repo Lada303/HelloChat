@@ -5,8 +5,10 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 
 import java.io.DataInputStream;
@@ -18,26 +20,63 @@ import java.util.ResourceBundle;
 
 public class Controller implements Initializable {
     @FXML
+    private TextField loginField;
+    @FXML
+    private PasswordField passwordField;
+    @FXML
+    private HBox logBox;
+    @FXML
+    private HBox msgBox;
+    @FXML
     private TextArea chatText;
-
     @FXML
     private TextField sendText;
 
     private final String SERVER_ADDRESS = "localhost";
     private final int SERVER_PORT = 8189;
+    private final int SIZE_LOGIN = 3;
+    private final int SIZE_PASS = 3;
     private Socket socket;
     private DataInputStream in;
     private DataOutputStream out;
-    private boolean connection;
+    //private boolean isAuthenticated;
+    private String userNick;
+    private Stage stage;
+
+    private void setAuthenticated(boolean authenticated) {
+        //this.isAuthenticated = authenticated;
+        msgBox.setManaged(authenticated);
+        msgBox.setVisible(authenticated);
+        logBox.setManaged(!authenticated);
+        logBox.setVisible(!authenticated);
+        if(!authenticated) {
+            userNick = "";
+        }
+        changeTitle();
+    }
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+        Platform. runLater(() -> {
+            stage = (Stage) chatText.getScene().getWindow();
+            stage.setOnCloseRequest(windowEvent -> clickClose());
+        });
+        setAuthenticated(false);
+    }
+
+    private boolean isConnected() {
+        return  !(socket == null || socket.isClosed());
+    }
+
+    private void startConnection() {
         try {
-            openConnection();
+            if (!isConnected()) {
+                openConnection();
+            }
         } catch (IOException e) {
             //e.printStackTrace();
-            chatText.appendText("Server is not available or already connect\n");
-            chatText.appendText("(Exp: " + e.getMessage() + ")\n");
+            chatText.appendText("Server is not available\n");
+            //chatText.appendText("(Exp: " + e.getMessage() + ")\n");
         }
     }
 
@@ -45,20 +84,29 @@ public class Controller implements Initializable {
         socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
         in = new DataInputStream(socket.getInputStream());
         out = new DataOutputStream(socket.getOutputStream());
-        connection = true;
         new Thread(() -> {
             try {
-                while (connection) {
+                while (isConnected()) {
                     String inStr = in.readUTF();
                     chatText.appendText(inStr + "\n");
-                    if (inStr.equalsIgnoreCase("Server: you disconnected!")) {
-                        break;
+                    if (inStr.startsWith("Server:")) {
+                        if (inStr.contains("Server: you authenticated")) {
+                            userNick = inStr.split(" ")[4];
+                            setAuthenticated(true);
+                            continue;
+                        }
+                        if (inStr.equalsIgnoreCase("Server: you disconnected!")) {
+                            setAuthenticated(false);
+                            break;
+                        }
                     }
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                //e.printStackTrace();
+                chatText.appendText("(Exp: " + e.getMessage() + ")\n");
             } finally {
                 closeConnection();
+                setAuthenticated(false);
             }
         }).start();
 
@@ -83,39 +131,11 @@ public class Controller implements Initializable {
     }
 
     @FXML
-    protected void sendMessage() {
-        if (socket == null || socket.isClosed()) {
-            chatText.appendText("No connection. Message don't sending.\n");
-        } else if (!sendText.getText().isEmpty() && !sendText.getText().equals(" ")) {
-            if (sendText.getText().equals("/end")) {
-                chatText.appendText("/end\n");
-                connection = false;
-            }
-            try {
-                out.writeUTF(sendText.getText());
-                sendText.setText("");
-            } catch (IOException e) {
-                //e.printStackTrace();
-                chatText.appendText("Message sending error\n");
-                chatText.appendText("(Exp: " + e.getMessage() + ")\n");
-            }
+    protected void clickNewAuthentication() {
+        if (!isConnected()) {
+            setAuthenticated(false);
+            return;
         }
-        sendText.requestFocus();
-    }
-
-    @FXML
-    public void clickStartConnection() {
-        try {
-            openConnection();
-        } catch (IOException e) {
-            //e.printStackTrace();
-            chatText.appendText("Server is not available or already connect\n");
-            chatText.appendText("(Exp: " + e.getMessage() + ")\n");
-        }
-    }
-
-    @FXML
-    public void clickCloseConnection() {
         try {
             out.writeUTF("/end");
         } catch (IOException e) {
@@ -125,23 +145,62 @@ public class Controller implements Initializable {
     }
 
     @FXML
-    public void clickClose(ActionEvent actionEvent) {
-        clickCloseConnection();
+    protected void clickClose() {
+        clickNewAuthentication();
+        Platform. runLater(() -> stage.close());
+    }
+
+    @FXML
+    protected void clickChangeTheme(ActionEvent actionEvent) {
+        String cssFile = ((MenuItem) actionEvent.getSource()).getText().toLowerCase() + ".css";
         Platform. runLater(() -> {
-            Stage stage = (Stage) chatText.getScene().getWindow();
-            stage.close();
+            stage.getScene().getStylesheets().clear();
+            stage.getScene().getStylesheets().add(cssFile);
         });
     }
 
     @FXML
-    public void clickChangeTheme(ActionEvent actionEvent) {
-        //MenuItem menuItem = (MenuItem) actionEvent.getSource();
-        String cssFile = ((MenuItem) actionEvent.getSource()).getText().toLowerCase() + ".css";
-        Platform. runLater(() -> {
-            chatText.getScene().getStylesheets().clear();
-            chatText.getScene().getStylesheets().add(cssFile);
-            Stage stage = (Stage) chatText.getScene().getWindow();
-            stage.setScene(chatText.getScene());
-        });
+    protected void clickSendLogInfo() {
+        startConnection();
+        if (!isConnected()) {
+            return;
+        }
+        String userLogin = loginField.getText().trim();
+        String userPassword = passwordField.getText().trim();
+        if (userLogin.length() < SIZE_LOGIN || userPassword.length() < SIZE_PASS) {
+            chatText.appendText(String.format("Wrong login (min %d) or password (min %d) length\n",
+                    SIZE_LOGIN, SIZE_PASS));
+            return;
+        }
+        String logMsg = String.format("/auth %s %s", userLogin, userPassword);
+        try {
+            out.writeUTF(logMsg);
+            passwordField.setText("");
+        } catch (IOException e) {
+            //e.printStackTrace();
+            chatText.appendText("Message sending error\n");
+            //chatText.appendText("(Exp: " + e.getMessage() + ")\n");
+        }
+    }
+
+    @FXML
+    protected void clickSendMessage() {
+        if (!isConnected()) {
+            chatText.appendText("No connection. Message don't sending.\n");
+        } else if (!sendText.getText().isEmpty() && !sendText.getText().equals(" ")) {
+            try {
+                out.writeUTF(sendText.getText());
+                sendText.setText("");
+            } catch (IOException e) {
+                //e.printStackTrace();
+                chatText.appendText("Message sending error\n");
+                //chatText.appendText("(Exp: " + e.getMessage() + ")\n");
+            }
+        }
+        sendText.requestFocus();
+    }
+
+    protected void changeTitle() {
+        Platform. runLater(() -> stage.setTitle(HelloChatApp.CHAT_TITLE + " - " + userNick));
     }
 }

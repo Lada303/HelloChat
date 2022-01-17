@@ -42,10 +42,26 @@ public class Server {
         clients.remove(clientHandler);
     }
 
-    protected void broadcastMsg(String msg, String name) {
+    protected void broadcastMsg(String msgSender, String msg) {
         for (ClientHandler client : clients) {
-            client.sendMessage(name + ": " + msg);
+            client.sendMessage(msgSender + ": " + msg);
         }
+    }
+
+    protected void privateMsg(String msgSender, String msgRecipient, String msg) {
+        for (ClientHandler client : clients) {
+            if (client.getNick().equals(msgRecipient)) {
+                client.sendMessage(msgSender + " to " + msgRecipient+ ": " + msg);
+                return;
+            }
+        }
+        for (ClientHandler client : clients) {
+            if (client.getNick().equals(msgSender)) {
+                client.sendMessage("Server: msg not received, " + msgRecipient + " offline");
+                break;
+            }
+        }
+
     }
 
 

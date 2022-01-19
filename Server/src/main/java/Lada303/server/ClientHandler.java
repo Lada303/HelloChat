@@ -37,12 +37,16 @@ public class ClientHandler {
         }
     }
 
+    public String getNick() {
+        return nick;
+    }
+
     private void readMessage() throws IOException {
         String inStr;
         M: while (true) {
             inStr = in.readUTF();
             if (inStr.startsWith("/")) {
-                String[] tokens = inStr.split(" ");
+                String[] tokens = inStr.split(" ", 3);
                 switch (tokens[0]) {
                     case "/auth":   nick = server.getAuthService().getNick(tokens[1], tokens[2]);
                                     if (nick != null) {
@@ -57,12 +61,14 @@ public class ClientHandler {
                                     sendMessage("Server: you disconnected!");
                                     server.unsubscribe(this);
                                     break M;
-                    case "/w":
+                    case "/w":      sendMessage(nick + " to " + tokens[1] + ": " + tokens[2]);
+                                    server.privateMsg(nick, tokens[1], tokens[2]);
+                                    break;
                     default: sendMessage("Server: Non-existent command");
                 }
                 continue;
             }
-            server.broadcastMsg(inStr, nick);
+            server.broadcastMsg(nick, inStr);
         }
     }
 

@@ -36,10 +36,33 @@ public class Server {
 
     protected void subscribe(ClientHandler clientHandler) {
         clients.add(clientHandler);
+        broadcastClientList();
     }
 
     protected void unsubscribe(ClientHandler clientHandler) {
         clients.remove(clientHandler);
+        broadcastClientList();
+    }
+
+    protected boolean isSubscribed(String nick) {
+        for (ClientHandler client : clients) {
+            if (client.getNick().equals(nick)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void broadcastClientList() {
+        StringBuilder clientList = new StringBuilder("/clients");
+        for (ClientHandler client : clients) {
+            clientList.append(" ");
+            clientList.append(client.getNick());
+        }
+        System.out.println(clientList);
+        for (ClientHandler client : clients) {
+            client.sendMessage(String.valueOf(clientList));
+        }
     }
 
     protected void broadcastMsg(String msgSender, String msg) {
@@ -63,7 +86,4 @@ public class Server {
         }
 
     }
-
-
-
 }

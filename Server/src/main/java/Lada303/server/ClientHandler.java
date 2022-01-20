@@ -48,23 +48,50 @@ public class ClientHandler {
             if (inStr.startsWith("/")) {
                 String[] tokens = inStr.split(" ", 3);
                 switch (tokens[0]) {
-                    case "/auth":   nick = server.getAuthService().getNick(tokens[1], tokens[2]);
-                                    if (nick != null) {
-                                        System.out.println("Client authenticated: " + nick + socket.getRemoteSocketAddress());
-                                        sendMessage("Server: you authenticated - " + nick);
-                                        server.subscribe(this);
-                                    } else {
-                                        sendMessage("Server: wrong login or password.");
-                                    }
-                                    break;
-                    case "/end":    System.out.println("Client disconnected: "+ nick + socket.getRemoteSocketAddress());
-                                    sendMessage("Server: you disconnected!");
-                                    server.unsubscribe(this);
-                                    break M;
-                    case "/w":      sendMessage(nick + " to " + tokens[1] + ": " + tokens[2]);
-                                    server.privateMsg(nick, tokens[1], tokens[2]);
-                                    break;
-                    default: sendMessage("Server: Non-existent command");
+                    case "/auth":
+                        nick = server.getAuthService().getNick(tokens[1], tokens[2]);
+                        if (nick != null) {
+                            if (server.isSubscribed(nick)) {
+                                sendMessage("Server: you are already online in another window.");
+                            } else {
+                                System.out.println("Client authenticated: " + nick + socket.getRemoteSocketAddress());
+                                sendMessage("/authOk " + nick);
+                                server.subscribe(this);
+                            }
+                        } else {
+                            sendMessage("Server: wrong login or password.");
+                        }
+                        break;
+                    case "/reg":
+                        tokens = inStr.split(" ", 4);
+                        if (tokens.length < 3 ||
+                                !server.getAuthService().registration(tokens[1], tokens[2], tokens[3])) {
+                            sendMessage("/regNo");
+                            break;
+                        }
+                        nick = tokens[3];
+                        sendMessage("/regOk " + nick);
+                        server.subscribe(this);
+                        break;
+                    case "/end":
+                        System.out.println("Client disconnected: "+ nick + socket.getRemoteSocketAddress());
+                        sendMessage("/end");
+                        server.unsubscribe(this);
+                        break M;
+                    case "/w":
+                        if (tokens.length < 3) {
+                            sendMessage("Server: wrong massage (no recipient or message text).");
+                            break;
+                        }
+                        if (tokens[1].equals(nick)) {
+                            sendMessage("Server: you try send massage yourself.");
+                            break;
+                        }
+                        sendMessage(nick + " to " + tokens[1] + ": " + tokens[2]);
+                        server.privateMsg(nick, tokens[1], tokens[2]);
+                        break;
+                    default:
+                        sendMessage("Server: Non-existent command");
                 }
                 continue;
             }

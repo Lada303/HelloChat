@@ -101,7 +101,7 @@ public class Controller implements Initializable {
                     String[] tokens = inStr.split(" ");
                     if (inStr.startsWith("/")) {
                         switch (tokens[0]) {
-                            case "/authNo":
+                            case "/regOk":
                                 regController.regStatus(tokens[0]);
                             case "/authOk":
                                 userNick = tokens[1];

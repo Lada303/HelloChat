@@ -34,6 +34,16 @@
     -fx-border-color: #e8d04d;
 }
 
+.list-view{
+    -fx-text-fill: #1e1a05;
+    -fx-highlight-fill: #2d2914;
+    -fx-highlight-text-fill: #8c7e36;
+    -fx-control-inner-background: #eee4b5;
+    -fx-border-width: 1;
+    -fx-border-radius: 0;
+    -fx-border-color: #e8d04d;
+}
+
 .text-field{
     -fx-text-fill: #1e1a05;
     -fx-highlight-fill: #2d2914;

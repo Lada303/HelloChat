@@ -31,6 +31,15 @@
     -fx-border-radius: 0;
     -fx-border-color: #37a7ec;
 }
+.list-view{
+    -fx-text-fill: #013554;
+    -fx-highlight-fill: #015285;
+    -fx-highlight-text-fill: #67bbef;
+    -fx-control-inner-background: #91cbef;
+    -fx-border-width: 1;
+    -fx-border-radius: 0;
+    -fx-border-color: #37a7ec;
+}
 
 .text-field{
     -fx-text-fill: #013554;

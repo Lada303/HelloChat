@@ -1,5 +1,7 @@
 package Lada303.server;
 
+import Lada303.service.ServiceCommands;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -48,37 +50,37 @@ public class ClientHandler {
             if (inStr.startsWith("/")) {
                 String[] tokens = inStr.split(" ", 3);
                 switch (tokens[0]) {
-                    case "/auth":
+                    case ServiceCommands.AUTH:
                         nick = server.getAuthService().getNick(tokens[1], tokens[2]);
                         if (nick != null) {
                             if (server.isSubscribed(nick)) {
                                 sendMessage("Server: you are already online in another window.");
                             } else {
                                 System.out.println("Client authenticated: " + nick + socket.getRemoteSocketAddress());
-                                sendMessage("/authOk " + nick);
+                                sendMessage(ServiceCommands.AUTH_OK + " " + nick);
                                 server.subscribe(this);
                             }
                         } else {
                             sendMessage("Server: wrong login or password.");
                         }
                         break;
-                    case "/reg":
+                    case ServiceCommands.REG:
                         tokens = inStr.split(" ", 4);
                         if (tokens.length < 3 ||
                                 !server.getAuthService().registration(tokens[1], tokens[2], tokens[3])) {
-                            sendMessage("/regNo");
+                            sendMessage(ServiceCommands.REG_NO);
                             break;
                         }
                         nick = tokens[3];
-                        sendMessage("/regOk " + nick);
+                        sendMessage(ServiceCommands.REG_OK + " " + nick);
                         server.subscribe(this);
                         break;
-                    case "/end":
+                    case ServiceCommands.END:
                         System.out.println("Client disconnected: "+ nick + socket.getRemoteSocketAddress());
-                        sendMessage("/end");
+                        sendMessage(ServiceCommands.END);
                         server.unsubscribe(this);
                         break M;
-                    case "/w":
+                    case ServiceCommands.W:
                         if (tokens.length < 3) {
                             sendMessage("Server: wrong massage (no recipient or message text).");
                             break;
@@ -87,7 +89,7 @@ public class ClientHandler {
                             sendMessage("Server: you try send massage yourself.");
                             break;
                         }
-                        sendMessage(nick + " to " + tokens[1] + ": " + tokens[2]);
+                        sendMessage(String.format("%s to %s: %s", nick, tokens[1], tokens[2]));
                         server.privateMsg(nick, tokens[1], tokens[2]);
                         break;
                     default:

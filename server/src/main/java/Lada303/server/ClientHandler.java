@@ -6,6 +6,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 
 public class ClientHandler {
 
@@ -25,7 +26,11 @@ public class ClientHandler {
             out.writeUTF("Server: Hello!");
             new Thread(() -> {
                 try {
+                    socket.setSoTimeout(120000);
                     readMessage();
+                } catch (SocketTimeoutException e) {
+                    System.out.println("Inactive client, disconnected - " + socket.getRemoteSocketAddress());
+                    sendMessage(ServiceCommands.END);
                 } catch (IOException e) {
                     //e.printStackTrace();
                     System.out.println(e.getMessage());
@@ -58,6 +63,7 @@ public class ClientHandler {
                             } else {
                                 System.out.println("Client authenticated: " + nick + socket.getRemoteSocketAddress());
                                 sendMessage(ServiceCommands.AUTH_OK + " " + nick);
+                                socket.setSoTimeout(0);
                                 server.subscribe(this);
                             }
                         } else {
@@ -66,13 +72,14 @@ public class ClientHandler {
                         break;
                     case ServiceCommands.REG:
                         tokens = inStr.split(" ", 4);
-                        if (tokens.length < 3 ||
+                        if (tokens.length < 4 ||
                                 !server.getAuthService().registration(tokens[1], tokens[2], tokens[3])) {
                             sendMessage(ServiceCommands.REG_NO);
                             break;
                         }
                         nick = tokens[3];
                         sendMessage(ServiceCommands.REG_OK + " " + nick);
+                        socket.setSoTimeout(0);
                         server.subscribe(this);
                         break;
                     case ServiceCommands.END:

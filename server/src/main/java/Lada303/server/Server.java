@@ -11,11 +11,13 @@ public class Server {
     private final int SERVER_PORT = 8189;
     private List<ClientHandler> clients;
     private AuthService authService;
+    private DbServerWork db;
 
     public Server() {
         try (ServerSocket serverSocket = new ServerSocket(SERVER_PORT)) {
             clients = new CopyOnWriteArrayList<>();
-            authService = new SimpleAuthService();
+            db = DbServerWork.getDb();
+            authService = JdbcAuthService.getJdbcAuthService(db);
             while (true) {
                 System.out.println("Server run, waiting connection");
                 Socket socket = serverSocket.accept();
@@ -26,6 +28,9 @@ public class Server {
             //e.printStackTrace();
             System.out.println("Server error: " + e.getMessage());
         } finally {
+            if (db != null) {
+                db.disconnect();
+            }
             System.out.println("Server stopped");
         }
     }

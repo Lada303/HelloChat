@@ -9,5 +9,8 @@ public class ServiceCommands {
     public static final String CLIENTS = "/clients";
     public static final String END = "/end";
     public static final String W = "/w";
+    public static final String CHG = "/chg";
+    public static final String CHG_OK = "/chgOk";
+    public static final String CHG_NO = "/chgNo";
 
 }

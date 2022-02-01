@@ -26,6 +26,8 @@ public class Controller implements Initializable {
     @FXML
     private PasswordField passwordField;
     @FXML
+    public Button btnReg;
+    @FXML
     private HBox logBox;
     @FXML
     private HBox msgBox;
@@ -110,6 +112,13 @@ public class Controller implements Initializable {
                                 continue;
                             case "/regNo":
                                 regController.regStatus(tokens[0]);
+                                continue;
+                            case "/chgOk":
+                                userNick = tokens[1];
+                                chatText.appendText("Server: you changed nick - " + userNick + "\n");
+                                setAuthenticated(true);
+                            case "/chgNo":
+                                regController.chgStatus(tokens[0]);
                                 continue;
                             case "/clients":
                                 Platform. runLater(() -> {
@@ -218,11 +227,23 @@ public class Controller implements Initializable {
     }
 
     @FXML
-    protected void clickReg() {
+    protected void clickReg(ActionEvent actionEvent) {
         if (regStage == null) {
             createRegWindow();
         }
+        if (actionEvent.getSource().equals(btnReg)) {
+            changeBtnReg(true);
+        } else {
+            changeBtnReg(false);
+        }
         regStage.show();
+    }
+
+    private void changeBtnReg(boolean bln) {
+        regController.getBtnReg().setVisible(bln);
+        regController.getBtnReg().setManaged(bln);
+        regController.getBtnChangeNick().setVisible(!bln);
+        regController.getBtnChangeNick().setManaged(!bln);
     }
 
     @FXML
@@ -266,11 +287,11 @@ public class Controller implements Initializable {
         }
     }
 
-    protected void sendRegInfo(String login, String password, String nick) {
+    protected void sendRegInfo(String com, String login, String password, String nick) {
         startConnection();
         if (!isConnected()) {
             return;
         }
-        outMsg(String.format("/reg %s %s %s", login, password, nick));
+        outMsg(String.format("%s %s %s %s", com, login, password, nick));
     }
 }

@@ -70,6 +70,7 @@ public class ClientHandler {
                             sendMessage("Server: wrong login or password.");
                         }
                         break;
+
                     case ServiceCommands.REG:
                         tokens = inStr.split(" ", 4);
                         if (tokens.length < 4 ||
@@ -82,11 +83,13 @@ public class ClientHandler {
                         socket.setSoTimeout(0);
                         server.subscribe(this);
                         break;
+
                     case ServiceCommands.END:
                         System.out.println("Client disconnected: "+ nick + socket.getRemoteSocketAddress());
                         sendMessage(ServiceCommands.END);
                         server.unsubscribe(this);
                         break M;
+
                     case ServiceCommands.W:
                         if (tokens.length < 3) {
                             sendMessage("Server: wrong massage (no recipient or message text).");
@@ -99,6 +102,21 @@ public class ClientHandler {
                         sendMessage(String.format("%s to %s: %s", nick, tokens[1], tokens[2]));
                         server.privateMsg(nick, tokens[1], tokens[2]);
                         break;
+
+                    case ServiceCommands.CHG:
+                        tokens = inStr.split(" ", 4);
+                        if (tokens.length < 4 ||
+                                !server.getAuthService().changeNick(tokens[1], tokens[2], tokens[3])) {
+                            sendMessage(ServiceCommands.CHG_NO);
+                            break;
+                        }
+                        server.unsubscribe(this);
+                        nick = tokens[3];
+                        sendMessage(ServiceCommands.CHG_OK + " " + nick);
+                        socket.setSoTimeout(0);
+                        server.subscribe(this);
+                        break;
+
                     default:
                         sendMessage("Server: Non-existent command");
                 }

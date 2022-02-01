@@ -21,6 +21,7 @@
     <Label text="Nickname"/>
     <TextField fx:id="nicknameField" HBox.hgrow="ALWAYS" promptText="nickname" onAction="#clickEnterByElement"/>
     <TextArea fx:id="textArea" VBox.vgrow="ALWAYS" editable="false"/>
-    <Button text="Reg" onAction="#clickBtnReg"/>
+    <Button fx:id="btnReg" text="Registration" visible="false" managed="false" onAction="#clickBtn"/>
+    <Button fx:id="btnChangeNick" text="Change Nick" visible="false" managed="false" onAction="#clickBtn"/>
 
 </VBox>

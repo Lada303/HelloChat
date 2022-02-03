@@ -76,13 +76,14 @@ public class DbServerWork {
             if (rs.next()) {
                 answer = rs.getString("nick");
                 System.out.println("return nick = " + answer);
+            } else {
+                System.out.println("User not founded = " + login + " " + password);
             }
             rs.close();
         } catch (SQLException e) {
             //e.printStackTrace();
             System.out.println("Exc: " + e.getMessage());
         }
-        System.out.println("User not founded = " + login + " " + password);
         return answer;
     }
 

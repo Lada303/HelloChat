@@ -15,7 +15,6 @@ public class ClientHandler {
     private DataInputStream in;
     private DataOutputStream out;
     private String nick;
-    //private boolean isAuthenticated;
 
     public ClientHandler(Server server, Socket socket) {
         try {
@@ -110,11 +109,9 @@ public class ClientHandler {
                             sendMessage(ServiceCommands.CHG_NO);
                             break;
                         }
-                        server.unsubscribe(this);
                         nick = tokens[3];
                         sendMessage(ServiceCommands.CHG_OK + " " + nick);
-                        socket.setSoTimeout(0);
-                        server.subscribe(this);
+                        server.broadcastClientList();
                         break;
 
                     default:

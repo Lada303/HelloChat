@@ -21,7 +21,7 @@
 
     <MenuBar>
         <Menu text = "Main">
-            <MenuItem text = "Change nick" onAction="#clickReg"/>
+            <MenuItem fx:id="miChangeNick" text = "Change nick" visible="false" onAction="#clickReg" />
             <MenuItem text = "New Authentication" onAction="#clickNewAuthentication"/>
             <SeparatorMenuItem></SeparatorMenuItem>
             <MenuItem text = "Close Chat" onAction="#clickClose"/>

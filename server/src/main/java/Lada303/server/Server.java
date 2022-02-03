@@ -58,7 +58,7 @@ public class Server {
         return false;
     }
 
-    private void broadcastClientList() {
+    protected void broadcastClientList() {
         StringBuilder clientList = new StringBuilder("/clients");
         for (ClientHandler client : clients) {
             clientList.append(" ");

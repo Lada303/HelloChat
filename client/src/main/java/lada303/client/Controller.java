@@ -22,6 +22,8 @@ import java.util.ResourceBundle;
 
 public class Controller implements Initializable {
     @FXML
+    public MenuItem miChangeNick;
+    @FXML
     private TextField loginField;
     @FXML
     private PasswordField passwordField;
@@ -45,7 +47,6 @@ public class Controller implements Initializable {
     private Socket socket;
     private DataInputStream in;
     private DataOutputStream out;
-    //private boolean isAuthenticated;
     private String userNick;
     private Stage stage;
     private Stage regStage;
@@ -61,7 +62,7 @@ public class Controller implements Initializable {
     }
 
     private void setAuthenticated(boolean authenticated) {
-        //this.isAuthenticated = authenticated;
+        miChangeNick.setVisible(authenticated);
         msgBox.setManaged(authenticated);
         msgBox.setVisible(authenticated);
         logBox.setManaged(!authenticated);
@@ -72,7 +73,7 @@ public class Controller implements Initializable {
         changeTitle();
     }
 
-    protected void changeTitle() {
+    private void changeTitle() {
         Platform. runLater(() -> stage.setTitle(HelloChatApp.CHAT_TITLE + " - " + userNick));
     }
 
@@ -231,11 +232,7 @@ public class Controller implements Initializable {
         if (regStage == null) {
             createRegWindow();
         }
-        if (actionEvent.getSource().equals(btnReg)) {
-            changeBtnReg(true);
-        } else {
-            changeBtnReg(false);
-        }
+        changeBtnReg(actionEvent.getSource().equals(btnReg));
         regStage.show();
     }
 

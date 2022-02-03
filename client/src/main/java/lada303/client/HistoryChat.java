@@ -14,7 +14,7 @@ public class HistoryChat {
         this.historyFile = new File( PATH_HISTORICAL + "/history_" + login + ".txt");
     }
 
-    public File getHistoryFile() {
+    protected File getHistoryFile() {
         return historyFile;
     }
 

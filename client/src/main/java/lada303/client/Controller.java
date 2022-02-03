@@ -131,7 +131,7 @@ public class Controller implements Initializable {
                             case "/end":
                                 Platform. runLater(() -> usersList.getItems().clear());
                                 chatText.appendText("Server: you disconnected!\n");
-                                setAuthenticated(false);
+                                clickNewAuthentication();
                                 break M;
                         }
                     }

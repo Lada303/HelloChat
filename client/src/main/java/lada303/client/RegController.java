@@ -26,12 +26,12 @@ public class RegController {
 
     private Controller controller;
 
-    public void setController(Controller controller) {
+    protected void setController(Controller controller) {
         this.controller = controller;
     }
 
     @FXML
-    public void clickBtn(ActionEvent actionEvent) {
+    protected void clickBtn(ActionEvent actionEvent) {
         String login = loginField.getText().trim();
         String password = passwordField.getText().trim();
         String nick = nicknameField.getText().trim();
@@ -51,20 +51,20 @@ public class RegController {
     }
 
     @FXML
-    public void clickEnterByElement(ActionEvent actionEvent) {
+    protected void clickEnterByElement(ActionEvent actionEvent) {
         int ind = box.getChildren().indexOf(actionEvent.getSource());
         box.getChildren().get(ind + 2).requestFocus();
     }
 
-    public Button getBtnReg() {
+    protected Button getBtnReg() {
         return btnReg;
     }
 
-    public Button getBtnChangeNick() {
+    protected Button getBtnChangeNick() {
         return btnChangeNick;
     }
 
-    public void regStatus(String result) {
+    protected void regStatus(String result) {
         if (result.equals("/regOk")) {
             textArea.appendText("Server: you have been registered\n");
         } else {
@@ -72,7 +72,7 @@ public class RegController {
         }
     }
 
-    public void chgStatus(String result) {
+    protected void chgStatus(String result) {
         if (result.equals("/chgOk")) {
             textArea.appendText("Server: you nick have been changed\n");
         } else {

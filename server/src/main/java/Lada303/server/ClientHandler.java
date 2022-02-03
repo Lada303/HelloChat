@@ -17,7 +17,7 @@ public class ClientHandler {
     private DataOutputStream out;
     private String nick;
 
-    public ClientHandler(Server server, Socket socket) {
+    protected ClientHandler(Server server, Socket socket) {
         try {
             this.server = server;
             this.socket = socket;
@@ -44,7 +44,7 @@ public class ClientHandler {
         }
     }
 
-    public String getNick() {
+    protected String getNick() {
         return nick;
     }
 
@@ -57,23 +57,22 @@ public class ClientHandler {
                 switch (tokens[0]) {
                     case ServiceCommands.AUTH:
                         authMethod(tokens);
-                        break;
+                        continue;
                     case ServiceCommands.REG:
                         regMethod(inStr);
-                        break;
+                        continue;
                     case ServiceCommands.W:
                         wMethod(tokens);
-                        break;
+                        continue;
                     case ServiceCommands.CHG:
                         chgMethod(inStr);
-                        break;
+                        continue;
                     case ServiceCommands.END:
                         endMethod();
                         break M;
                     default:
                         sendMessage("Server: Non-existent command");
                 }
-                continue;
             }
             server.broadcastMsg(nick, inStr);
         }
@@ -95,7 +94,7 @@ public class ClientHandler {
                 sendMessage("Server: you are already online in another window.");
             } else {
                 System.out.println("Client authenticated: " + nick + socket.getRemoteSocketAddress());
-                sendMessage(ServiceCommands.AUTH_OK + " " + nick);
+                sendMessage(ServiceCommands.AUTH_OK + " " + nick + " " + tokens[1]);
                 socket.setSoTimeout(0);
                 server.subscribe(this);
             }
@@ -112,7 +111,7 @@ public class ClientHandler {
             return;
         }
         nick = tokens[3];
-        sendMessage(ServiceCommands.REG_OK + " " + nick);
+        sendMessage(ServiceCommands.REG_OK + " " + nick + " " + tokens[1]);
         socket.setSoTimeout(0);
         server.subscribe(this);
     }
@@ -123,7 +122,7 @@ public class ClientHandler {
             return;
         }
         if (tokens[1].equals(nick)) {
-            sendMessage("Server: you try send massage yourself.");
+            sendMessage("Server: you try send message yourself.");
             return;
         }
         sendMessage(String.format("%s to %s: %s", nick, tokens[1], tokens[2]));

@@ -18,6 +18,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class Controller implements Initializable {
@@ -47,10 +49,13 @@ public class Controller implements Initializable {
     private Socket socket;
     private DataInputStream in;
     private DataOutputStream out;
+    private String userLogin;
     private String userNick;
     private Stage stage;
     private Stage regStage;
     private RegController regController;
+    private HistoryChat historyChat;
+    private List<String> listOfChatStrings;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -97,8 +102,12 @@ public class Controller implements Initializable {
         socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
         in = new DataInputStream(socket.getInputStream());
         out = new DataOutputStream(socket.getOutputStream());
+        if (listOfChatStrings == null) {
+            listOfChatStrings = new ArrayList<>();
+        }
         new Thread(() -> {
             try {
+                chatText.clear();
                 M: while (isConnected()) {
                     String inStr = in.readUTF();
                     String[] tokens = inStr.split(" ");
@@ -107,17 +116,15 @@ public class Controller implements Initializable {
                             case "/regOk":
                                 regController.regStatus(tokens[0]);
                             case "/authOk":
-                                userNick = tokens[1];
-                                chatText.appendText("Server: you authenticated - " + userNick + "\n");
-                                setAuthenticated(true);
+                                authOkMethod(tokens);
                                 continue;
                             case "/regNo":
                                 regController.regStatus(tokens[0]);
                                 continue;
                             case "/chgOk":
                                 userNick = tokens[1];
-                                chatText.appendText("Server: you changed nick - " + userNick + "\n");
-                                setAuthenticated(true);
+                                addStringToChatAndList("Server: you changed nick - " + userNick);
+                                changeTitle();
                             case "/chgNo":
                                 regController.chgStatus(tokens[0]);
                                 continue;
@@ -130,21 +137,47 @@ public class Controller implements Initializable {
                                 continue;
                             case "/end":
                                 Platform. runLater(() -> usersList.getItems().clear());
-                                chatText.appendText("Server: you disconnected!\n");
+                                addStringToChatAndList("Server: you disconnected!");
                                 clickNewAuthentication();
                                 break M;
                         }
                     }
-                    chatText.appendText(inStr + "\n");
+                    addStringToChatAndList(inStr);
                 }
             } catch (IOException e) {
                 //e.printStackTrace();
                 chatText.appendText("(Exp: " + e.getMessage() + ")\n");
             } finally {
+                if(historyChat != null) {
+                    historyChat.writeInHistoryFile(listOfChatStrings);
+                }
+                listOfChatStrings.clear();
                 closeConnection();
                 setAuthenticated(false);
             }
         }).start();
+    }
+
+    private void authOkMethod(String[] tokens) {
+        userNick = tokens[1];
+        userLogin = tokens[2];
+        if (historyChat == null || !historyChat.getHistoryFile().toString().contains(userLogin)) {
+            historyChat = new HistoryChat(userLogin);
+            historyChat.isExistsOrCreateHistoryFile();
+        }
+        List<String> list = historyChat.readFromHistoryFile();
+        chatText.appendText("--- loading history " + list.size() + " ---\n");
+        for (String s : list) {
+            chatText.appendText(s + "\n");
+        }
+        chatText.appendText("--- end history ---\n");
+        addStringToChatAndList("Server: you authenticated - " + userNick);
+        setAuthenticated(true);
+    }
+
+    private void addStringToChatAndList(String str) {
+        listOfChatStrings.add(str + "\n");
+        chatText.appendText(str + "\n");
     }
 
     private void closeConnection() {

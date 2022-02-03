@@ -6,6 +6,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
 
 public class ClientHandler {
@@ -55,65 +56,20 @@ public class ClientHandler {
                 String[] tokens = inStr.split(" ", 3);
                 switch (tokens[0]) {
                     case ServiceCommands.AUTH:
-                        nick = server.getAuthService().getNick(tokens[1], tokens[2]);
-                        if (nick != null) {
-                            if (server.isSubscribed(nick)) {
-                                sendMessage("Server: you are already online in another window.");
-                            } else {
-                                System.out.println("Client authenticated: " + nick + socket.getRemoteSocketAddress());
-                                sendMessage(ServiceCommands.AUTH_OK + " " + nick);
-                                socket.setSoTimeout(0);
-                                server.subscribe(this);
-                            }
-                        } else {
-                            sendMessage("Server: wrong login or password.");
-                        }
+                        authMethod(tokens);
                         break;
-
                     case ServiceCommands.REG:
-                        tokens = inStr.split(" ", 4);
-                        if (tokens.length < 4 ||
-                                !server.getAuthService().registration(tokens[1], tokens[2], tokens[3])) {
-                            sendMessage(ServiceCommands.REG_NO);
-                            break;
-                        }
-                        nick = tokens[3];
-                        sendMessage(ServiceCommands.REG_OK + " " + nick);
-                        socket.setSoTimeout(0);
-                        server.subscribe(this);
+                        regMethod(inStr);
                         break;
-
-                    case ServiceCommands.END:
-                        System.out.println("Client disconnected: "+ nick + socket.getRemoteSocketAddress());
-                        sendMessage(ServiceCommands.END);
-                        server.unsubscribe(this);
-                        break M;
-
                     case ServiceCommands.W:
-                        if (tokens.length < 3) {
-                            sendMessage("Server: wrong massage (no recipient or message text).");
-                            break;
-                        }
-                        if (tokens[1].equals(nick)) {
-                            sendMessage("Server: you try send massage yourself.");
-                            break;
-                        }
-                        sendMessage(String.format("%s to %s: %s", nick, tokens[1], tokens[2]));
-                        server.privateMsg(nick, tokens[1], tokens[2]);
+                        wMethod(tokens);
                         break;
-
                     case ServiceCommands.CHG:
-                        tokens = inStr.split(" ", 4);
-                        if (tokens.length < 4 ||
-                                !server.getAuthService().changeNick(tokens[1], tokens[2], tokens[3])) {
-                            sendMessage(ServiceCommands.CHG_NO);
-                            break;
-                        }
-                        nick = tokens[3];
-                        sendMessage(ServiceCommands.CHG_OK + " " + nick);
-                        server.broadcastClientList();
+                        chgMethod(inStr);
                         break;
-
+                    case ServiceCommands.END:
+                        endMethod();
+                        break M;
                     default:
                         sendMessage("Server: Non-existent command");
                 }
@@ -130,6 +86,66 @@ public class ClientHandler {
             //e.printStackTrace();
             System.out.println("Exp: " + e.getMessage());
         }
+    }
+
+    private void authMethod(String[] tokens) throws SocketException {
+        nick = server.getAuthService().getNick(tokens[1], tokens[2]);
+        if (nick != null) {
+            if (server.isSubscribed(nick)) {
+                sendMessage("Server: you are already online in another window.");
+            } else {
+                System.out.println("Client authenticated: " + nick + socket.getRemoteSocketAddress());
+                sendMessage(ServiceCommands.AUTH_OK + " " + nick);
+                socket.setSoTimeout(0);
+                server.subscribe(this);
+            }
+        } else {
+            sendMessage("Server: wrong login or password.");
+        }
+    }
+
+    private void regMethod(String inStr) throws SocketException {
+        String[] tokens = inStr.split(" ", 4);
+        if (tokens.length < 4 ||
+                !server.getAuthService().registration(tokens[1], tokens[2], tokens[3])) {
+            sendMessage(ServiceCommands.REG_NO);
+            return;
+        }
+        nick = tokens[3];
+        sendMessage(ServiceCommands.REG_OK + " " + nick);
+        socket.setSoTimeout(0);
+        server.subscribe(this);
+    }
+
+    private void wMethod(String[] tokens) {
+        if (tokens.length < 3) {
+            sendMessage("Server: wrong massage (no recipient or message text).");
+            return;
+        }
+        if (tokens[1].equals(nick)) {
+            sendMessage("Server: you try send massage yourself.");
+            return;
+        }
+        sendMessage(String.format("%s to %s: %s", nick, tokens[1], tokens[2]));
+        server.privateMsg(nick, tokens[1], tokens[2]);
+    }
+
+    private void chgMethod(String inStr) {
+        String[] tokens = inStr.split(" ", 4);
+        if (tokens.length < 4 ||
+                !server.getAuthService().changeNick(tokens[1], tokens[2], tokens[3])) {
+            sendMessage(ServiceCommands.CHG_NO);
+            return;
+        }
+        nick = tokens[3];
+        sendMessage(ServiceCommands.CHG_OK + " " + nick);
+        server.broadcastClientList();
+    }
+
+    private void endMethod() {
+        System.out.println("Client disconnected: "+ nick + socket.getRemoteSocketAddress());
+        sendMessage(ServiceCommands.END);
+        server.unsubscribe(this);
     }
 
     private void closeConnection() {

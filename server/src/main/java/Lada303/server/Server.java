@@ -17,7 +17,7 @@ public class Server {
     private AuthService authService;
     private DbServerWork db;
 
-    public Server() {
+    protected Server() {
         try (ServerSocket serverSocket = new ServerSocket(SERVER_PORT)) {
             isStopServer = false;
             //поток - слушатель сканера для ввода команд администратора сервера

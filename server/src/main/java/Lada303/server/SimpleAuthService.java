@@ -50,4 +50,8 @@ public class SimpleAuthService implements AuthService{
         return true;
     }
 
+    @Override
+    public boolean changeNick(String login, String password, String nickname) {
+        return false;
+    }
 }

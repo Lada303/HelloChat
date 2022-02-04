@@ -2,6 +2,7 @@ package lada303.client;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
@@ -16,16 +17,21 @@ public class RegController {
     public TextField nicknameField;
     @FXML
     public TextArea textArea;
+    @FXML
     public VBox box;
+    @FXML
+    public Button btnReg;
+    @FXML
+    public Button btnChangeNick;
 
     private Controller controller;
 
-    public void setController(Controller controller) {
+    protected void setController(Controller controller) {
         this.controller = controller;
     }
 
     @FXML
-    public void clickBtnReg() {
+    protected void clickBtn(ActionEvent actionEvent) {
         String login = loginField.getText().trim();
         String password = passwordField.getText().trim();
         String nick = nicknameField.getText().trim();
@@ -34,19 +40,43 @@ public class RegController {
                     controller.SIZE_LOGIN, controller.SIZE_PASS));
             return;
         }
-        controller.sendRegInfo(login, password, nick);
+        if (actionEvent.getSource().equals(btnReg)) {
+            controller.sendRegInfo("/reg",login, password, nick);
+            return;
+        }
+        if (actionEvent.getSource().equals(btnChangeNick)) {
+            controller.sendRegInfo("/chg", login, password, nick);
+            return;
+        }
     }
+
     @FXML
     protected void clickEnterByElement(ActionEvent actionEvent) {
         int ind = box.getChildren().indexOf(actionEvent.getSource());
         box.getChildren().get(ind + 2).requestFocus();
     }
 
-    public void regStatus(String result) {
+    protected Button getBtnReg() {
+        return btnReg;
+    }
+
+    protected Button getBtnChangeNick() {
+        return btnChangeNick;
+    }
+
+    protected void regStatus(String result) {
         if (result.equals("/regOk")) {
             textArea.appendText("Server: you have been registered\n");
         } else {
-            textArea.appendText("Registration failed. Login or nickname taken\n");
+            textArea.appendText("Server: Registration failed. Login or nickname taken\n");
+        }
+    }
+
+    protected void chgStatus(String result) {
+        if (result.equals("/chgOk")) {
+            textArea.appendText("Server: you nick have been changed\n");
+        } else {
+            textArea.appendText("Server: Changed failed. Login or password have mistakes\n");
         }
     }
 

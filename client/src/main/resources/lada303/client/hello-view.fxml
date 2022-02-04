@@ -12,6 +12,7 @@
 <?import javafx.scene.control.PasswordField?>
 
 <?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.SeparatorMenuItem?>
 <VBox alignment="CENTER" spacing="10.0" xmlns:fx="http://javafx.com/fxml"
       fx:controller="lada303.client.Controller">
     <padding>
@@ -20,7 +21,9 @@
 
     <MenuBar>
         <Menu text = "Main">
+            <MenuItem fx:id="miChangeNick" text = "Change nick" visible="false" onAction="#clickReg" />
             <MenuItem text = "New Authentication" onAction="#clickNewAuthentication"/>
+            <SeparatorMenuItem></SeparatorMenuItem>
             <MenuItem text = "Close Chat" onAction="#clickClose"/>
         </Menu>
         <Menu text = "Themes">
@@ -35,7 +38,7 @@
         <TextField fx:id="loginField"  HBox.hgrow="ALWAYS" promptText="login" onAction="#clickEnterByLoginOrPassword"/>
         <PasswordField fx:id="passwordField"  HBox.hgrow="ALWAYS" promptText="password" onAction="#clickEnterByLoginOrPassword"/>
         <Button text="Log" onAction="#clickLog"/>
-        <Button text="Reg" onAction="#clickReg"/>
+        <Button fx:id="btnReg" text="Reg" onAction="#clickReg"/>
     </HBox>
     <HBox VBox.vgrow="ALWAYS">
         <TextArea fx:id="chatText" HBox.hgrow="ALWAYS" editable="false" focusTraversable="false"/>

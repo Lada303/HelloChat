@@ -8,9 +8,10 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.util.logging.Logger;
 
 public class ClientHandler {
-
+    private  static  final Logger LOGGER = Logger.getLogger(ClientHandler.class.getName());
     private Server server;
     private Socket socket;
     private DataInputStream in;
@@ -29,18 +30,18 @@ public class ClientHandler {
                     socket.setSoTimeout(120000);
                     readMessage();
                 } catch (SocketTimeoutException e) {
-                    System.out.println("Inactive client, disconnected - " + socket.getRemoteSocketAddress());
+                    LOGGER.info("Inactive client, disconnected - " + socket.getRemoteSocketAddress());
                     sendMessage(ServiceCommands.END);
                 } catch (IOException e) {
                     //e.printStackTrace();
-                    System.out.println(e.getMessage());
+                    LOGGER.warning(e.getMessage());
                 } finally {
                     closeConnection();
                 }
             }).start();
         } catch (IOException e) {
             //e.printStackTrace();
-            System.out.println("ClientHandler error: " + e.getMessage());
+            LOGGER.warning("ClientHandler error: " + e.getMessage());
         }
     }
 
@@ -83,7 +84,7 @@ public class ClientHandler {
             out.writeUTF(msg);
         } catch (IOException e) {
             //e.printStackTrace();
-            System.out.println("Exp: " + e.getMessage());
+            LOGGER.warning("Exp: " + e.getMessage());
         }
     }
 
@@ -93,13 +94,14 @@ public class ClientHandler {
             if (server.isSubscribed(nick)) {
                 sendMessage("Server: you are already online in another window.");
             } else {
-                System.out.println("Client authenticated: " + nick + socket.getRemoteSocketAddress());
+                LOGGER.info("Client authenticated: " + nick + socket.getRemoteSocketAddress());
                 sendMessage(ServiceCommands.AUTH_OK + " " + nick + " " + tokens[1]);
                 socket.setSoTimeout(0);
                 server.subscribe(this);
             }
         } else {
             sendMessage("Server: wrong login or password.");
+            LOGGER.info("Client not authenticated: " + socket.getRemoteSocketAddress());
         }
     }
 
@@ -108,10 +110,12 @@ public class ClientHandler {
         if (tokens.length < 4 ||
                 !server.getAuthService().registration(tokens[1], tokens[2], tokens[3])) {
             sendMessage(ServiceCommands.REG_NO);
+            LOGGER.info("Client not reg: " + socket.getRemoteSocketAddress());
             return;
         }
         nick = tokens[3];
         sendMessage(ServiceCommands.REG_OK + " " + nick + " " + tokens[1]);
+        LOGGER.info("Client is reg: " + nick + socket.getRemoteSocketAddress());
         socket.setSoTimeout(0);
         server.subscribe(this);
     }
@@ -125,8 +129,11 @@ public class ClientHandler {
             sendMessage("Server: you try send message yourself.");
             return;
         }
-        sendMessage(String.format("%s to %s: %s", nick, tokens[1], tokens[2]));
-        server.privateMsg(nick, tokens[1], tokens[2]);
+        if (!server.privateMsg(nick, tokens[1], tokens[2])) {
+            sendMessage("Server: msg not received, " + tokens[1] + " offline");
+        } else {
+            sendMessage(String.format("%s to %s: %s", nick, tokens[1], tokens[2]));
+        }
     }
 
     private void chgMethod(String inStr) {
@@ -134,15 +141,17 @@ public class ClientHandler {
         if (tokens.length < 4 ||
                 !server.getAuthService().changeNick(tokens[1], tokens[2], tokens[3])) {
             sendMessage(ServiceCommands.CHG_NO);
+            LOGGER.info("Client nick not changed " + nick + socket.getRemoteSocketAddress());
             return;
         }
         nick = tokens[3];
         sendMessage(ServiceCommands.CHG_OK + " " + nick);
+        LOGGER.info("Client changed nick: " + nick + socket.getRemoteSocketAddress());
         server.broadcastClientList();
     }
 
     private void endMethod() {
-        System.out.println("Client disconnected: "+ nick + socket.getRemoteSocketAddress());
+        LOGGER.info("Client disconnected: "+ nick + socket.getRemoteSocketAddress());
         sendMessage(ServiceCommands.END);
         server.unsubscribe(this);
     }
@@ -161,7 +170,8 @@ public class ClientHandler {
         try {
             socket.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
+            LOGGER.warning("Exc: " + e.getMessage());
         }
     }
 }

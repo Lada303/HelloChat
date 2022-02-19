@@ -1,8 +1,10 @@
 package Lada303.server;
 
 import java.sql.*;
+import java.util.logging.Logger;
 
 public class DbServerWork {
+    private static final Logger LOGGER = Logger.getLogger(DbServerWork.class.getName());
     private static DbServerWork db;
     private Connection connection;
     private PreparedStatement prStmtGetNick;
@@ -22,22 +24,22 @@ public class DbServerWork {
             }
         } catch (SQLException e) {
             //e.printStackTrace();
-            System.out.println("DB not connected or error in prepareStatement: " + e.getMessage());
+            LOGGER.warning("DB not connected or error in prepareStatement: " + e.getMessage());
         }
         return db;
     }
 
     protected void setConnection() throws SQLException {
         connection = DriverManager.getConnection("jdbc:sqlite:users.sqlite");
-        System.out.println("DB connected");
+        LOGGER.info("DB connected");
         prStmtGetNick = connection.prepareStatement("SELECT nick FROM users WHERE login = ? AND password = ?;");
-        System.out.println("PreparedStatement getNick - ok");
+        LOGGER.info("PreparedStatement getNick - ok");
         prStmtRegUpdate = connection.prepareStatement(
                 "INSERT INTO users (login, password, nick) VALUES (?, ?, ?);");
-        System.out.println("PreparedStatement regUpdate - ok");
+        LOGGER.info("PreparedStatement regUpdate - ok");
         prStmtNickUpdate = connection.prepareStatement(
                 "UPDATE users SET nick = ? WHERE login = ?;");
-        System.out.println("PreparedStatement nickUpdate - ok");
+        LOGGER.info("PreparedStatement nickUpdate - ok");
     }
 
     protected void disconnect() {
@@ -56,7 +58,7 @@ public class DbServerWork {
             }
         } catch (SQLException e) {
             //e.printStackTrace();
-            System.out.println("Exc: " + e.getMessage());
+            LOGGER.warning("Exc: " + e.getMessage());
         }
     }
 
@@ -75,14 +77,14 @@ public class DbServerWork {
             ResultSet rs = prStmtGetNick.executeQuery();
             if (rs.next()) {
                 answer = rs.getString("nick");
-                System.out.println("return nick = " + answer);
+                LOGGER.fine("return nick = " + answer);
             } else {
-                System.out.println("User not founded = " + login + " " + password);
+                LOGGER.fine("User not founded = " + login + " " + password);
             }
             rs.close();
         } catch (SQLException e) {
             //e.printStackTrace();
-            System.out.println("Exc: " + e.getMessage());
+            LOGGER.warning("Exc: " + e.getMessage());
         }
         return answer;
     }
@@ -95,11 +97,11 @@ public class DbServerWork {
             prStmtRegUpdate.setString(1, login);
             prStmtRegUpdate.setString(2, password);
             prStmtRegUpdate.setString(3, nickname);
-             System.out.println("Insert into row - " + prStmtRegUpdate.executeUpdate());
+            LOGGER.fine("Client reg : insert into row - " + prStmtRegUpdate.executeUpdate());
             return true;
         } catch (SQLException e) {
             //e.printStackTrace();
-            System.out.println("Exc: " + e.getMessage());
+            LOGGER.warning("Exc: " + e.getMessage());
             return false;
         }
     }
@@ -115,16 +117,15 @@ public class DbServerWork {
             if (rs.next()) {
                 prStmtNickUpdate.setString(1, nickname);
                 prStmtNickUpdate.setString(2, login);
-                System.out.println("Update nick into row - " + prStmtNickUpdate.executeUpdate());
+                LOGGER.fine("Update nick into row - " + prStmtNickUpdate.executeUpdate());
                 rs.close();
                 return true;
             }
             rs.close();
         } catch (SQLException e) {
             //e.printStackTrace();
-            System.out.println("Exc: " + e.getMessage());
+            LOGGER.warning("Exc: " + e.getMessage());
         }
-        System.out.println("login or password not exist");
         return false;
     }
 }

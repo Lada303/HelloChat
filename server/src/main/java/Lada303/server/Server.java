@@ -8,8 +8,12 @@ import java.net.Socket;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.logging.Logger;
 
 public class Server {
+    private static final Logger LOGGER = Logger.getLogger(Server.class.getName());
     private final String SERVER_ADDRESS = "localhost";
     private final int SERVER_PORT = 8189;
     private volatile boolean isStopServer;
@@ -24,26 +28,28 @@ public class Server {
             Thread listenerSc = new Thread(this::listenerScanner);
             listenerSc.setDaemon(true);
             listenerSc.start();
-
+            //запускаем сервер
             clients = new CopyOnWriteArrayList<>();
             db = DbServerWork.getDb();
             authService = JdbcAuthService.getJdbcAuthService(db);
+            LOGGER.fine("Server run");
+            //Сервер ждет подключения
             while (!isStopServer) {
-                System.out.println("Server run, waiting connection");
+                LOGGER.info("Server waiting connection");
                 Socket socket = serverSocket.accept();
                 if (!isStopServer) {
-                    System.out.println("Client connected" + socket.getRemoteSocketAddress());
+                    LOGGER.info("Client connected" + socket.getRemoteSocketAddress());
                     new ClientHandler(this, socket);
                 }
             }
         } catch (IOException e) {
             //e.printStackTrace();
-            System.out.println("Server error: " + e.getMessage());
+            LOGGER.warning("Server error: " + e.getMessage());
         } finally {
             if (db != null) {
                 db.disconnect();
             }
-            System.out.println("Server stopped");
+            LOGGER.info("Server stopped");
         }
     }
 
@@ -57,15 +63,17 @@ public class Server {
                 try {
                     new Socket(SERVER_ADDRESS, SERVER_PORT).close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    //e.printStackTrace();
+                    LOGGER.warning("Exc: " + e.getMessage());
                 }
                 for (ClientHandler client : clients) {
                     client.sendMessage("Server stopped!!!");
                     client.sendMessage(ServiceCommands.END);
                 }
-                return;
+                break;
             }
         }
+        sc.close();
     }
 
     protected AuthService getAuthService() {
@@ -97,31 +105,28 @@ public class Server {
             clientList.append(" ");
             clientList.append(client.getNick());
         }
-        System.out.println(clientList);
         for (ClientHandler client : clients) {
             client.sendMessage(String.valueOf(clientList));
         }
+        LOGGER.fine("send clientsList");
     }
 
     protected void broadcastMsg(String msgSender, String msg) {
+        ExecutorService executor = Executors.newFixedThreadPool(3);
         for (ClientHandler client : clients) {
-            client.sendMessage(msgSender + ": " + msg);
+            executor.execute(() -> client.sendMessage(msgSender + ": " + msg));
+            //client.sendMessage(msgSender + ": " + msg);
         }
+        executor.shutdown();
     }
 
-    protected void privateMsg(String msgSender, String msgRecipient, String msg) {
+    protected boolean privateMsg(String msgSender, String msgRecipient, String msg) {
         for (ClientHandler client : clients) {
             if (client.getNick().equals(msgRecipient)) {
                 client.sendMessage(msgSender + " to " + msgRecipient+ ": " + msg);
-                return;
+                return true;
             }
         }
-        for (ClientHandler client : clients) {
-            if (client.getNick().equals(msgSender)) {
-                client.sendMessage("Server: msg not received, " + msgRecipient + " offline");
-                break;
-            }
-        }
-
+        return false;
     }
 }
